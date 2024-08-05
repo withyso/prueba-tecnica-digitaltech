@@ -6,10 +6,15 @@ from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from api.utils import APIException, generate_sitemap
-from api.models import db
+from api.models import db, User
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
+
+from flask_jwt_extended import create_access_token
+from flask_jwt_extended import get_jwt_identity
+from flask_jwt_extended import jwt_required
+from flask_jwt_extended import JWTManager
 
 # from models import Person
 
@@ -18,6 +23,9 @@ static_file_dir = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '../public/')
 app = Flask(__name__)
 app.url_map.strict_slashes = False
+
+app.config["JWT_SECRET_KEY"] = os.getenv("SUPER_SECRET_KEY")
+jwt = JWTManager(app)
 
 # database condiguration
 db_url = os.getenv("DATABASE_URL")
@@ -48,8 +56,6 @@ def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
 # generate sitemap with all your endpoints
-
-
 @app.route('/')
 def sitemap():
     if ENV == "development":
@@ -57,8 +63,6 @@ def sitemap():
     return send_from_directory(static_file_dir, 'index.html')
 
 # any other endpoint will try to serve it like a static file
-
-
 @app.route('/<path:path>', methods=['GET'])
 def serve_any_other_file(path):
     if not os.path.isfile(os.path.join(static_file_dir, path)):
@@ -72,3 +76,52 @@ def serve_any_other_file(path):
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3001))
     app.run(host='0.0.0.0', port=PORT, debug=True)
+
+
+#Endpoints requeridos 
+
+#Registro
+@app.route('/api/signup', methods=['POST'])
+def signup_user():
+    body = request.get_json(silent=True)
+    if body is None: 
+        return jsonify({'msg' : 'You need to add info inside body'}), 400
+    if 'username' not in body: 
+        return jsonify({'msg' : 'You need to set an username'}), 400
+    if 'password' not in body: 
+        return jsonify({'msg' : 'You need to set your password'}), 400
+    if 'name' not in body: 
+        return jsonify({'msg' : 'You need to write your first name'}), 400
+    if 'surname' not in body:
+        return jsonify({'msg' : 'You need to add your surname'}), 400 
+
+    new_user = User()
+    new_user.username = body['username']
+    new_user.password = body['password']
+    new_user.name = body['name']
+    new_user.surname = body['surname']
+
+    db.session.add(new_user)
+    db.session.commit()
+    return jsonify({"msg" : "new user created"}), 201
+
+#Login de usuario
+@app.route('/api/login', methods=['POST'])
+def login_user():
+    body = request.get_json(silent=True)
+    if body is None: 
+        return jsonify({'msg' : 'You need to add info inside body'}), 400
+    if "username" not in body: 
+        return jsonify({'msg' : 'You need to add username'}), 400 
+    if "password" not in body: 
+        return jsonify({'msg' : 'Your need to add your password'}), 400 
+    
+    #Verificacion de usuario 
+    user = User.query.filter_by(username=body["username"]).first()
+    if user:
+        print("el usuario existe, su nombre es", user.name)
+        return jsonify({"msg" : "Ok"}), 200
+    else:
+        print("no existe un usuario con ese username")
+        return jsonify({"msg" : "No existe usuario con ese username"}), 404
+    
