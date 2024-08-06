@@ -1,3 +1,102 @@
 /* 
     General Styles used on every website (Don't Repeat Yourself)
 */
+
+.curvieInput {
+    border-radius: 8px;
+    border: 1px, solid, rgb(200, 200, 200);
+    height: 2em;
+    padding-left: 7px;
+    font-size: 15px;
+    outline: none;
+}
+
+.curvieButton {
+    border-radius: 8px;
+    border: 0px;
+    height: 2.2em;
+    padding-left: 7px;
+    font-size: 14px;
+    background-color: hsl(192, 92%, 42%);
+    color: white;
+}
+
+.curvieButton:hover {
+    cursor: pointer;
+    transition: ease-in;
+    animation-duration: 0.5s;
+    background-color: #55c1db;
+}
+
+.curvieStyle {
+    border: 1px, solid, rgb(200, 200, 200);
+    border-radius: 5px;
+}
+
+.curvieBigBox {
+    height: 27em;
+    width: 22em;
+    border: 1px, solid, rgb(200, 200, 200);
+    border-radius: 5px;
+}
+
+.curvieBox {
+    height: 22em;
+    width: 22em;
+    margin-top: 10em;
+    border: 1px, solid, rgb(200, 200, 200);
+    border-radius: 5px;
+}
+
+.curvieSmallBox {
+    height: 3em;
+    width: 22em;
+    margin-top: 10em;
+    border: 1px, solid, rgb(200, 200, 200);
+    border-radius: 5px;
+}
+
+.curvieMediumBox {
+    height: 3em;
+    width: 23em;
+    margin-top: 10em;
+    border: 1px, solid, rgb(200, 200, 200);
+    border-radius: 5px;
+}
+
+.blueStrong {
+    color: #55c1db;
+    cursor: pointer;
+}
+
+.labelCustom {
+    font-size: 14px;
+}
+
+.feedPost {
+    background-color: rgb(241, 240, 240);
+    height: 80vh;
+    /* Ocupa el 80% de la altura de la viewport */
+    width: 85vw;
+    /* Ocupa el 80% del ancho de la viewport */
+    @media (max-width: 768px) {
+        height: 70vh;
+        width: 85vw;
+    }
+
+    @media (min-width: 769px) and (max-width: 1024px) {
+        height: 30vh;
+        width: 40vw;
+    }
+
+    @media (min-width: 1025px) {
+        height: 50vh;
+        width: 25vw;
+    }
+}
+
+.post-image {
+    width: 100%;
+    height: 50%;
+    object-fit: cover
+}

@@ -6,11 +6,13 @@ from flask import Flask, request, jsonify, url_for, send_from_directory
 from flask_migrate import Migrate
 from flask_swagger import swagger
 from api.utils import APIException, generate_sitemap
-from api.models import db, User
+from api.models import db, User, Post, PostStatus
 from api.routes import api
 from api.admin import setup_admin
 from api.commands import setup_commands
 
+from flask import Flask
+from flask_cors import CORS
 from flask_jwt_extended import create_access_token
 from flask_jwt_extended import get_jwt_identity
 from flask_jwt_extended import jwt_required
@@ -22,6 +24,7 @@ ENV = "development" if os.getenv("FLASK_DEBUG") == "1" else "production"
 static_file_dir = os.path.join(os.path.dirname(
     os.path.realpath(__file__)), '../public/')
 app = Flask(__name__)
+CORS(app)
 app.url_map.strict_slashes = False
 
 app.config["JWT_SECRET_KEY"] = os.getenv("SUPER_SECRET_KEY")
@@ -93,9 +96,11 @@ def signup_user():
     if 'name' not in body: 
         return jsonify({'msg' : 'You need to write your first name'}), 400
     if 'surname' not in body:
-        return jsonify({'msg' : 'You need to add your surname'}), 400 
+        return jsonify({'msg' : 'You need to add your surname'}), 400
 
     new_user = User()
+    if 'avatar' in body:
+        new_user.avatar = body['avatar']
     new_user.username = body['username']
     new_user.password = body['password']
     new_user.name = body['name']
@@ -120,8 +125,52 @@ def login_user():
     user = User.query.filter_by(username=body["username"]).first()
     if user:
         print("el usuario existe, su nombre es", user.name)
-        return jsonify({"msg" : "Ok"}), 200
+        access_token = create_access_token(identity={
+            "username":user.username, 
+            "id":user.id, 
+            "name":user.name,
+            "surname": user.surname})
+        print(access_token)
+        return jsonify({"msg" : "Login success", "access_token": access_token}), 200
     else:
         print("no existe un usuario con ese username")
         return jsonify({"msg" : "No existe usuario con ese username"}), 404
     
+#crear post
+@app.route('/api/createpost', methods=['POST'])
+@jwt_required()
+def create_post():
+    body = request.get_json(silent=True)
+    if 'message' not in body:
+        return jsonify({"msg" : "Necesitas agregar una descripcion para tu post"}), 400
+    if 'image' not in body:
+        return jsonify({"msg" : "Necesitas agregar una imagen"}), 400
+    
+    user_id = get_jwt_identity()['id']
+    new_post = Post()
+    if 'location' in body:
+        new_post.location = body['location']
+    new_post.message = body['message']
+    new_post.author_id = user_id
+    new_post.image = body['image']
+    new_post.status = PostStatus.PUBLISHED
+    try:
+        db.session.add(new_post)
+        db.session.commit()
+        return jsonify({"msg" : 'post creado satisfactoriamente', "post" : new_post.serialize()}), 200
+    except Exception as e:
+        return jsonify({'Error' : str(e)}), 500
+
+    
+#Feed de usuario para visualizar post
+@app.route('/api/feed')
+@jwt_required()
+def private_feed():
+    identity = get_jwt_identity()
+    print(identity)
+    user_username = User.query.filter_by(username = identity['username']).first()
+    if not user_username:
+        return({"msg" : "El usuario no existe"}), 401
+    else:
+        post_data = [post.serialize() for post in Post.query.all()]
+        return jsonify({"msg" : "ok", "data" : post_data}), 200

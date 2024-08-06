@@ -13,6 +13,7 @@ class User(db.Model):
     name = db.Column(db.String(20), unique=False, nullable=False)
     surname = db.Column(db.String(20), unique=False, nullable=False)
     avatar = db.Column(db.String(500), unique=False, nullable=True)
+    post = db.relationship("Post", back_populates="author")
 
     def __repr__(self):
         return f'Usuario con username {self.username}'
@@ -37,7 +38,7 @@ class Post(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     message = db.Column(db.String(30), unique=False, nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
-    author_id_relationship = db.relationship(User)
+    author = db.relationship(User, back_populates="post")
     created_at = db.Column(DateTime, default=datetime.utcnow)
     location = db.Column(db.String(25), unique=False, nullable=True)
     status = db.Column(SQLEnum(PostStatus), nullable=False, default=PostStatus.DRAFTED)
@@ -50,9 +51,9 @@ class Post(db.Model):
         return {
             "id": self.id,
             "message": self.message,
-            "author" : self.author_id,
+            "author" : self.author.username,
             "location" : self.location,
-            "status"  : self.status,
+            "image" : self.image
         }
 
 class PostLikes(db.Model):
