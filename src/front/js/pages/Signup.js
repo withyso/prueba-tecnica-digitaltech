@@ -30,9 +30,7 @@ const Signup = () => {
         const result = await actions.signUpUser(newUserData)
         if (result.success) {
             showNotification('Usuario creado con exito', "success")
-            setInterval(() => {
-                navigate('/login')
-            }, 2000)
+            navigate('/')
             return;
         } else {
             return showNotification(result.message, "error")

@@ -23,7 +23,7 @@ export const Home = () => {
 
 	useEffect(() => {
 		validatingPost()
-	}, [])
+	}, [token])
 
 	useEffect(() => {
 		console.log(posts)
@@ -68,12 +68,18 @@ export const Home = () => {
 		}
 	};
 
+	const handleLogout = () => {
+		localStorage.removeItem('access_token')
+		showNotification("logout satisfactorio", "success")
+		navigate('/')
+	}
+
 	return (
 		<React.Fragment>
 			<div className="mt-5 container feed d-flex flex-column align-items-center p-4 gap-4">
 				<h1 className='text-center mb-4 fs-1 text-secondary'>DTech Inc</h1>
 				<div className="buttons d-flex flex-row gap-3">
-					<button type="button" className="btn btn-danger">Logout</button>
+					<button type="button" className="btn btn-danger" onClick={handleLogout}>Logout</button>
 					<button type="button" className="btn btn-success" data-bs-toggle="modal" data-bs-target="#exampleModal">
 						Crear post
 					</button>
